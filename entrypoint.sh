@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e
 
-# Default to 10.0.1.228:8118 if not provided
+# Fallback to 10.0.1.228:8118 if no SOCKS5_PROXY is provided
 : "${SOCKS5_PROXY:=10.0.1.228:8118}"
-# Optional: let users specify proxy type via env var, default = "socks5"
+# Optional: let the user specify the proxy type (socks5, http-connect, etc.). Defaults to socks5.
 : "${SOCKS5_TYPE:=socks5}"
 
 # Parse SOCKS5_PROXY into IP and PORT
@@ -12,14 +12,15 @@ SOCKS5_PORT="$(echo "$SOCKS5_PROXY" | cut -d: -f2)"
 
 echo "========================================="
 echo "Setting up Redsocks with the following:"
-echo "SOCKS5 IP: $SOCKS5_IP"
-echo "SOCKS5 PORT: $SOCKS5_PORT"
-echo "SOCKS5 TYPE: $SOCKS5_TYPE"
+echo "SOCKS5 IP:    $SOCKS5_IP"
+echo "SOCKS5 PORT:  $SOCKS5_PORT"
+echo "SOCKS5 TYPE:  $SOCKS5_TYPE"
 echo "========================================="
 
 # Dynamically create /etc/redsocks.conf
 cat <<EOF > /etc/redsocks.conf
 base {
+    /* debug logs, turn off in production if you prefer */
     log_debug = on;
     log_info = on;
     daemon = off;
@@ -35,15 +36,16 @@ redsocks {
 }
 EOF
 
-# Configure iptables to redirect all outbound TCP to Redsocks on port 12345
-echo "Configuring iptables for Redsocks..."
+echo "Configuring iptables to redirect all outbound TCP traffic to Redsocks..."
+# Create a new chain for Redsocks
 iptables -t nat -N REDSOCKS
+# Redirect all TCP traffic to port 12345 (where Redsocks listens)
 iptables -t nat -A REDSOCKS -p tcp -j REDIRECT --to-ports 12345
+# Apply that chain to all TCP traffic in the OUTPUT chain
 iptables -t nat -A OUTPUT -p tcp -j REDSOCKS
 
-# Start redsocks
 echo "Starting Redsocks..."
 redsocks -c /etc/redsocks.conf &
 
-# Finally, run the original entrypoint script
+# Finally, run the original LidaTube entrypoint script to start your app
 exec ./thewicklowwolf-init.sh
