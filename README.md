@@ -8,20 +8,15 @@
 LidaTube is a tool for finding and fetching missing Lidarr albums via yt-dlp.
 
 
-## Run using docker-compose
+## Run using docker run
 
-```yaml
-services:
-  lidatube:
-    image: thewicklowwolf/lidatube:latest
-    container_name: lidatube
-    volumes:
-      - /path/to/config:/lidatube/config
-      - /data/media/lidatube:/lidatube/downloads
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - 5000:5000
-    restart: unless-stopped
+```bash
+docker run -d \
+    --name lidatube_vpn \
+    -e SOCKS5_PROXY="10.0.1.228:8118" \
+    -e SOCKS5_TYPE="socks5" \
+    -p 5000:5000 \
+    lidatube-redsocks:latest
 ```
 
 ## Configuration via environment variables
