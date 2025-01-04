@@ -13,7 +13,7 @@ LidaTube is a tool for finding and fetching missing Lidarr albums via yt-dlp.
 ```bash
 docker run -d \
     --name lidatube_vpn \
-    -e SOCKS5_PROXY="10.0.1.228:8118" \
+    -e SOCKS5_PROXY="10.0.0.0:8111" \
     -e SOCKS5_TYPE="socks5" \
     -p 5000:5000 \
     lidatube-redsocks:latest
